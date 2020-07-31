@@ -38,11 +38,11 @@ def gcn_model(inputs, adj, hidden_list):
     inputs = tf.matmul(adj, inputs)
     W1 = weight_get('W1',[inputs.shape[-1], hidden_list[0]])
     W2 = weight_get('W2',[ hidden_list[0], hidden_list[1]])
-    W3 = weight_get('W3',[ hidden_list[1], 1])
-    b1 = tf.placeholder(tf.float32,[1])
+    W3 = weight_get('W3',[ hidden_list[1],5])
+    b1 = tf.placeholder(tf.float32,[5])
     h1= tf.nn.relu(tf.matmul(inputs,W1))
     h2 = tf.nn.relu(tf.matmul(h1,W2))
-    logits = tf.matmul(h2,W3) + b1
+    logits = tf.matmul(h2,W3)
     outputs = tf.nn.softmax(logits)
     return h2, outputs
 
@@ -73,7 +73,7 @@ for load_path in load_list:
     score_quality = np.loadtxt('data_xu/五个特征/quality/' + load_path + '.txt')
     score_quality = list(score_quality)
 
-    score_aesthetics = np.loadtxt('data_xu/徐给的数据/五个特征/aesthetics/' + load_path + '.txt')  # snap 得分
+    score_aesthetics = np.loadtxt('data_xu/五个特征/aesthetics/' + load_path + '.txt')  # snap 得分
     score_aesthetics = list(score_aesthetics)
 
     score_memory = np.loadtxt('data_xu/五个特征/memory/' + load_path + '.txt')
@@ -142,8 +142,8 @@ adj_A = A.todense()    #邻接矩阵
 X, Y = np.asarray(gatherAll), np.asarray(y_All)
 adj = np.asarray(adj_A)
 adj = tf.cast(adj, tf.float32)
-train_x, train_y = X[:24*900,], Y[:24*900,]
-test_x, test_y = X[24*900:,], Y[24*900:,]
+train_x, train_y = X[:24,], Y[:24,]
+test_x, test_y = X[24:,], Y[24:,]
 
 # path = ''
 # adj_path = ''
@@ -151,27 +151,26 @@ test_x, test_y = X[24*900:,], Y[24*900:,]
 # train_x,train_y = np.zeros(shape=(100,23,34)), np.ones(shape=(100,5))
 
 node_num, features,hidden_list = 900, 5, [128,64]
-class_num, epoch = 5, 1
+class_num, epoch = 5, 50
 inputs = tf.placeholder(tf.float32, shape=[None, node_num, features])
-y_true = tf.placeholder(tf.float32, shape=[None, class_num])
+y_true = tf.placeholder(tf.float32, shape=[None, node_num, class_num])
 # adj = get_graph(adj_path)
 
 logits,outputs = gcn_model(inputs, adj, hidden_list)
-loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_true))
-optim = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_true))
+optim = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
 
 with tf.Session() as sess:
     tf.global_variables_initializer().run()
-    for _ in range(epoch):
+    for i in range(epoch):
         _, train_loss = sess.run([optim,loss],feed_dict={inputs:train_x,
                                                          y_true:train_y})
-
-
-
-
+        print('epoch = {}, train_loss = {}'.format(i,train_loss))
     pres = sess.run(outputs, feed_dict={inputs:test_x})
-    pre_labels = np.argmax(pres, axis=1)
-    true_labels = np.argmax(test_y,axis=1)
+    press = pres.reshape(-1, pres.shape[-1])
+    pre_labels = np.argmax(press, axis=1)
+    true_labels = np.argmax(test_y.reshape(-1,test_y.shape[-1]),axis=1)
     acc = accuracy_score(true_labels, pre_labels)
     print('Acc = {}'.format(acc))
+    result = np.column_stack((pre_labels.reshape(-1,1), true_labels.reshape(-1,1)))
 
