@@ -21,6 +21,7 @@ a_memory = []
 a_vvsc = []
 y_data = []
 gatherAll = []    #(25,900,5)
+y_All = []  #(25,900,1)
 for load_path in load_list:
     ######下载标注分数########
     # mat = io.loadmat('F:/论文/视频摘要/SumMe/GT/'+load_path+'.mat')
@@ -46,6 +47,7 @@ for load_path in load_list:
     #      range(0, min(len(score_motion), len(score_quality), len(score_aesthetics), len(score_memory), len(score_vvsc)))]
 
     gatherOut = []
+    y_out = []
     for i in range(0,900):
         # a_motion.append(score_motion[i])
         # a_quality.append(score_quality[i])
@@ -53,6 +55,7 @@ for load_path in load_list:
         # a_memory.append(score_memory[i])
         # a_vvsc.append(score_vvsc[i])
         gather = []
+        y_gather = []
         gather.append(score_motion[i])
         gather.append(score_quality[i])
         gather.append(score_aesthetics[i])
@@ -60,10 +63,24 @@ for load_path in load_list:
         gather.append(score_vvsc[i])
 
         gatherOut.append(gather)
-        y_data.append(score_gt[i][0])  # 真实值
+        # y_data.append(score_gt[i][0])  # 真实值
+        test_y = score_gt[i][0]
+        if 0<=test_y<0.2:
+            test_y = [1,0,0,0,0]
+        elif 0.2<=test_y<0.4:
+            test_y =[0,1,0,0,0]
+        elif 0.4 <= test_y < 0.6:
+            test_y = [0,0,1,0,0]
+        elif 0.6<=test_y<0.8:
+            test_y =[0,0,0,1,0]
+        elif 0.8<=test_y<=1:
+            test_y =[0,0,0,0,1]
+        # y_gather.append(test_y)
+        y_out.append(test_y)
 
 
     gatherAll.append(gatherOut)
+    y_All.append(y_out)
 a_1 = np.array(a_motion)
 a_2 = np.array(a_quality)
 a_3 = np.array(a_aesthetics)
