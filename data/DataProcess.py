@@ -25,22 +25,22 @@ y_All = []  #(25,900,1)
 for load_path in load_list:
     ######下载标注分数########
     # mat = io.loadmat('F:/论文/视频摘要/SumMe/GT/'+load_path+'.mat')
-    mat = io.loadmat('C:/Users/haowus/Desktop/徐给的数据/五个特征/专家评分/' + load_path + '.mat')
+    mat = io.loadmat('data_xu/五个特征/专家评分/' + load_path + '.mat')
     score_gt = np.array(mat['gt_score'])  # 键值 是numpy格式
 
-    score_motion = np.loadtxt('C:/Users/haowus/Desktop/徐给的数据/五个特征/motion/' + load_path + '.txt')  # 无毛刺的版本
+    score_motion = np.loadtxt('data_xu/五个特征/motion/' + load_path + '.txt')  # 无毛刺的版本
     score_motion = list(score_motion)
 
-    score_quality = np.loadtxt('C:/Users/haowus/Desktop/徐给的数据/五个特征/quality/' + load_path + '.txt')
+    score_quality = np.loadtxt('data_xu/五个特征/quality/' + load_path + '.txt')
     score_quality = list(score_quality)
 
-    score_aesthetics = np.loadtxt('C:/Users/haowus/Desktop/徐给的数据/五个特征/aesthetics/' + load_path + '.txt')  # snap 得分
+    score_aesthetics = np.loadtxt('data_xu/五个特征/aesthetics/' + load_path + '.txt')  # snap 得分
     score_aesthetics = list(score_aesthetics)
 
-    score_memory = np.loadtxt('C:/Users/haowus/Desktop/徐给的数据/五个特征/memory/' + load_path + '.txt')
+    score_memory = np.loadtxt('data_xu/五个特征/memory/' + load_path + '.txt')
     score_memory = list(score_memory)
 
-    score_vvsc = np.loadtxt('C:/Users/haowus/Desktop/徐给的数据/五个特征/vvsc/' + load_path + '.txt')  # 分割线对应的列表coco分数
+    score_vvsc = np.loadtxt('data_xu/五个特征/vvsc/' + load_path + '.txt')  # 分割线对应的列表coco分数
     score_vvsc = list(score_vvsc)
 
     # m = [x for x in
