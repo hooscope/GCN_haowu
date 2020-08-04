@@ -43,14 +43,14 @@ for load_path in load_list:
     score_vvsc = np.loadtxt('../data_xu/五个特征/vvsc/' + load_path + '.txt')  # 分割线对应的列表coco分数
     score_vvsc = list(score_vvsc)
 
-    # m = [x for x in
-    #      range(0, min(len(score_motion), len(score_quality), len(score_aesthetics), len(score_memory), len(score_vvsc)))]
-    frame_num = min(len(score_motion), len(score_quality), len(score_aesthetics), len(score_memory), len(score_vvsc))
-    print(load_path,"帧数:",frame_num)
+    m = [x for x in
+        range(0, min(len(score_motion), len(score_quality), len(score_aesthetics), len(score_memory), len(score_vvsc)))]
+    # frame_num = min(len(score_motion), len(score_quality), len(score_aesthetics), len(score_memory), len(score_vvsc))
+    # print(load_path,"帧数:",frame_num)
 
     gatherOut = []
     y_out = []
-    for i in range(0,900):
+    for i in range(len(m)):
         # a_motion.append(score_motion[i])
         # a_quality.append(score_quality[i])
         # a_aesthetics.append(score_aesthetics[i])
@@ -64,7 +64,7 @@ for load_path in load_list:
         gather.append(score_memory[i])
         gather.append(score_vvsc[i])
 
-        gatherOut.append(gather)
+        gatherAll.append(gather)
         # y_data.append(score_gt[i][0])  # 真实值
         test_y = score_gt[i][0]
         if 0<=test_y<0.2:
@@ -78,11 +78,11 @@ for load_path in load_list:
         elif 0.8<=test_y<=1:
             test_y =[0,0,0,0,1]
         # y_gather.append(test_y)
-        y_out.append(test_y)
+        y_All.append(test_y)
 
 
-    gatherAll.append(gatherOut)
-    y_All.append(y_out)
+    # gatherAll.append(gatherOut)
+    # y_All.append(y_out)
 a_1 = np.array(a_motion)
 a_2 = np.array(a_quality)
 a_3 = np.array(a_aesthetics)

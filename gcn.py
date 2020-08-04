@@ -1,7 +1,7 @@
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 l2_reg = tf.contrib.layers.l2_regularizer(scale=5e-4)
 def get_graph(path):
     """
@@ -38,13 +38,13 @@ def gcn_model(inputs, adj, hidden_list):
     inputs = tf.matmul(adj, inputs)
     W1 = weight_get('W1',[inputs.shape[-1], hidden_list[0]])
     W2 = weight_get('W2',[ hidden_list[0], hidden_list[1]])
-    W3 = weight_get('W3',[ hidden_list[1],5])
-    b1 = tf.placeholder(tf.float32,[5])
+    W3 = weight_get('W3',[ hidden_list[1],class_num])
+    b1 = tf.placeholder(tf.float32,[class_num])
     h1= tf.nn.relu(tf.matmul(inputs,W1))
     h2 = tf.nn.relu(tf.matmul(h1,W2))
     logits = tf.matmul(h2,W3)
     outputs = tf.nn.softmax(logits)
-    return h2, outputs
+    return logits, outputs
 
 #数据部分
 import numpy as np  # 引入numpy
@@ -139,33 +139,69 @@ adj_A = A.todense()    #邻接矩阵
 
 
 
-X, Y = np.asarray(gatherAll), np.asarray(y_All)
+def plot_confusion_matrix(cm, savename='nn', title='Confusion Matrix'):
+    classes = np.arange(class_num)
+    plt.figure(figsize=(12, 8), dpi=100)
+    np.set_printoptions(precision=2)
+
+    # 在混淆矩阵中每格的概率值
+    ind_array = np.arange(len(classes))
+    x, y = np.meshgrid(ind_array, ind_array)
+    for x_val, y_val in zip(x.flatten(), y.flatten()):
+        c = cm[y_val][x_val]
+        if c > 0.001:
+            plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=15, va='center', ha='center')
+
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
+    plt.title(title)
+    plt.colorbar()
+    xlocations = np.array(range(len(classes)))
+    plt.xticks(xlocations, classes, rotation=90)
+    plt.yticks(xlocations, classes)
+    plt.ylabel('Actual label')
+    plt.xlabel('Predict label')
+
+    # offset the tick
+    tick_marks = np.array(range(len(classes))) + 0.5
+    plt.gca().set_xticks(tick_marks, minor=True)
+    plt.gca().set_yticks(tick_marks, minor=True)
+    plt.gca().xaxis.set_ticks_position('none')
+    plt.gca().yaxis.set_ticks_position('none')
+    plt.grid(True, which='minor', linestyle='-')
+    plt.gcf().subplots_adjust(bottom=0.15)
+
+    # show confusion matrix
+    # plt.savefig(savename, format='png')
+    plt.show()
+X, Y = np.asarray(gatherAll), np.asarray(y_All)[:,:,:3]
 adj = np.asarray(adj_A)
 adj = tf.cast(adj, tf.float32)
 train_x, train_y = X[:24,], Y[:24,]
-test_x, test_y = X[24:,], Y[24:,]
 
 # path = ''
 # adj_path = ''
 
 # train_x,train_y = np.zeros(shape=(100,23,34)), np.ones(shape=(100,5))
 
+test_x, test_y = X[24:,], Y[24:,]
 node_num, features,hidden_list = 900, 5, [128,64]
-class_num, epoch = 5, 50
+class_num, epoch =3, 1000
 inputs = tf.placeholder(tf.float32, shape=[None, node_num, features])
-y_true = tf.placeholder(tf.float32, shape=[None, node_num, class_num])
 # adj = get_graph(adj_path)
 
+y_true = tf.placeholder(tf.float32, shape=[None, node_num, class_num])
 logits,outputs = gcn_model(inputs, adj, hidden_list)
-loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=y_true))
-optim = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
+loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_true))
 
+optim = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(loss)
 with tf.Session() as sess:
     tf.global_variables_initializer().run()
+    losses = []
     for i in range(epoch):
         _, train_loss = sess.run([optim,loss],feed_dict={inputs:train_x,
                                                          y_true:train_y})
         print('epoch = {}, train_loss = {}'.format(i,train_loss))
+        losses.append(train_loss)
     pres = sess.run(outputs, feed_dict={inputs:test_x})
     press = pres.reshape(-1, pres.shape[-1])
     pre_labels = np.argmax(press, axis=1)
@@ -173,4 +209,13 @@ with tf.Session() as sess:
     acc = accuracy_score(true_labels, pre_labels)
     print('Acc = {}'.format(acc))
     result = np.column_stack((pre_labels.reshape(-1,1), true_labels.reshape(-1,1)))
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.plot(losses)
+    plt.show()
+    cm = confusion_matrix(true_labels, pre_labels)
+    plot_confusion_matrix(cm, title='Confusion Matrix')
+# Set up plot
+
+
 
