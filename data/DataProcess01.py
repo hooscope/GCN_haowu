@@ -6,7 +6,7 @@
 
 import numpy as np  # 引入numpy
 from scipy import io
-
+import pandas as pd
 load_list = ["Air_Force_One", 'Base_jumping', 'Bearpark_climbing', 'Bike_Polo',
                  'Bus_in_Rock_Tunnel', 'car_over_camera', 'Car_railcrossing',
                  'Cockpit_Landing', 'Cooking', 'Eiffel_Tower', 'Excavators_river_crossing',
@@ -79,13 +79,25 @@ for load_path in load_list:
             test_y =[0,0,0,0,1]
         # y_gather.append(test_y)
         y_All.append(test_y)
+vector = np.asarray(gatherAll)
+all_vals = []
+print(vector.shape[0])
+for i in range(50):
+    vals = []
+    print(i)
+    for j in range(vector.shape[0]):
+        if i!=j:
+            op=np.linalg.norm(vector[i]-vector[j])
+            vals.append([int(i),int(j),op])
+    vals.sort(key=lambda val:val[2])
+    vals = np.asarray(vals)[:1000,:2]
+    # vals = vals[:1000,:2]
+    pd.DataFrame(vals).to_csv('D:\haowus\knn_graph\{}_1000.csv'.format(str(i)), index=None, header=None)
+    all_vals.append(vals[:50,:2])
+    # print(vals)
+    # np.save(str(i)+".npy",vals[:1000,:2])
+    # all_vals.append(vals[:100])
+all_vals = np.asarray(all_vals)
+all_vals = all_vals.reshape(-1,all_vals.shape[-1])
 
-
-    # gatherAll.append(gatherOut)
-    # y_All.append(y_out)
-a_1 = np.array(a_motion)
-a_2 = np.array(a_quality)
-a_3 = np.array(a_aesthetics)
-a_4 = np.array(a_memory)
-a_5 = np.array(a_vvsc)
-y = np.array(y_data)
+pd.DataFrame(all_vals).to_csv('D:\haowus\knn_graph\\all_50.csv',index=None, header=None)
